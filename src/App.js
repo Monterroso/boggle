@@ -1,6 +1,6 @@
 import './App.css';
 import React, { useState, useEffect } from "react"
-import StartPage from "./components/StarPage"
+import StartPage from "./components/StartPage"
 import GamePage from "./components/GamePage"
 import EndPage from "./components/EndPage"
 
@@ -45,10 +45,10 @@ function App() {
   const [timeRemaining, setTimeRemaining] = useState(duration)
   const [initLetters, setInitLetter] = useState()
   const [currGameScore, setCurrGameScore] = useState(0)
-  const [highScores, setHighScores] = useState([])
+  const [highScores, setHighScores] = useState({})
 
   useEffect(() => {
-    fetch('https://github.com/redbo/scrabble/blob/master/dictionary.txt')
+    fetch('https://raw.githubusercontent.com/redbo/scrabble/master/dictionary.txt')
     .then(response => response.json())
     .then(data => setWordDictionary(Set(data.split('\n'))))
   }, [])
@@ -123,9 +123,19 @@ function App() {
 
   const displayPage = () => {
     if (pageValue === 0) {
-      return <StartPage/>
+      return <StartPage
+        highScores={highScores}
+        startFunction={setTimer}
+      />
     } else if (pageValue === 1) {
-      return <GamePage/>
+      return <GamePage
+        scoringFunction={scoringFunction}
+        initLetters={initLetters}
+        setScore={setCurrGameScore}
+        width={width}
+        height={height}
+        min={minWordLength}
+      />
     } else {
       return <EndPage/>
     }
