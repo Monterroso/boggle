@@ -2,14 +2,17 @@ import React, { useState, useEffect } from "react"
 import Tile from "./Tile"
 import { isNil } from "lodash"
 
-const GamePage = ({scoringFunction, initLetters, min, width, height, setScore}) => {
+const GamePage = ({scoringFunction, initLetters, min, width, height, setScore, timeRemaining}) => {
   const [submittedWords, setSubmittedWords] = useState({})
   //tuples in form of (x, y)
   const [selectedTiles, setSelectedTiles] = useState([])
   const [selectedError, setSelectedError] = useState()
 
   const checkTileIn = (pool, tile) => {
-    pool.reduce((prevVal, elem) => {
+    if (pool.length === 0) {
+      return false
+    }
+    return pool.reduce((prevVal, elem) => {
       if (elem[0] === tile[0] && elem[1] === tile[1]) {
         return true
       }
@@ -31,7 +34,7 @@ const GamePage = ({scoringFunction, initLetters, min, width, height, setScore}) 
   }
 
   const getWordFromTiles = (tiles) => {
-    return "".join(tiles.map(tile => getLetterAt(tile)))
+    return tiles.map(tile => getLetterAt(...tile)).join("")
   }
 
   const clickBehavior = (x, y) => {
@@ -72,9 +75,11 @@ const GamePage = ({scoringFunction, initLetters, min, width, height, setScore}) 
     const retList = []
     for (let x = 0; x < width; x++) {
       retList.push(<Tile
-        isClicked={checkTileIn(selectedTiles, [x, y])}
-        isLatestClick={checkTileIn([selectedTiles[selectedTiles.length - 1]], [x, y])}
-        letterOfTile={getLetterAt([x, y])}
+        key={`${x}${y}tile`}
+        isTouching={selectedTiles.length !== 0 && checkTouching(selectedTiles[selectedTiles.length - 1], [x, y])}
+        isClicked={selectedTiles.length !== 0 && checkTileIn(selectedTiles, [x, y])}
+        isLatestClick={selectedTiles.length !== 0 && checkTileIn([selectedTiles[selectedTiles.length - 1]], [x, y])}
+        letterOfTile={getLetterAt(x, y)}
         onClick={() => clickBehavior(x, y)}
       />)
     }
@@ -91,6 +96,7 @@ const GamePage = ({scoringFunction, initLetters, min, width, height, setScore}) 
 
 
   return <div>
+    <div>Time remaining: {timeRemaining}</div>
     {
       getTable()
     }
@@ -104,7 +110,10 @@ const GamePage = ({scoringFunction, initLetters, min, width, height, setScore}) 
         })
       }
     </div>
-    <div onClick={() => !isNil(selectedError) && submitWord()} disabled={!isNil(selectedError)}>Submit</div>
+    {
+      !isNil(selectedError) && <div>{selectedError}</div>
+    }
+    <div onClick={() => isNil(selectedError) && submitWord()} disabled={!isNil(selectedError)}>Submit</div>
   </div>
 }
 

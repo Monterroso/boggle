@@ -43,18 +43,22 @@ function App() {
   //0 is home, 1 is board, 2 is end
   const [pageValue, setPageValue] = useState(0)
   const [timeRemaining, setTimeRemaining] = useState(duration)
-  const [initLetters, setInitLetter] = useState()
+  const [initLetters, setInitLetters] = useState()
   const [currGameScore, setCurrGameScore] = useState(0)
   const [highScores, setHighScores] = useState({})
 
   useEffect(() => {
     fetch('https://raw.githubusercontent.com/redbo/scrabble/master/dictionary.txt')
-    .then(response => response.json())
-    .then(data => setWordDictionary(Set(data.split('\n'))))
+    .then(response => {
+      return response.text()
+    })
+    .then(data => {
+      setWordDictionary(new Set(data.split('\n').map(elem => elem.toLocaleLowerCase())))
+    })
   }, [])
 
   const isWordInDictionary = (word) => {
-    if (wordDictionary.includes(word)) {
+    if (wordDictionary.has(word)) {
       return true
     }
     return false
@@ -62,11 +66,11 @@ function App() {
 
   const scoringFunction = (word) => {
     let effectiveLength = word.length
-    word.forEach(letter => {
-      if (letter === "q") {
+    for (let i = 0; i < word.length; i++) {
+      if (word[i] === "q") {
         effectiveLength += 1
       }
-    })
+    }
     if (isWordInDictionary(word)) {
       if (effectiveLength < minWordLength) {
         throw Error("Word is less than word length")
@@ -87,8 +91,8 @@ function App() {
   }
 
   const setLetters = () => {
-    possibleDice.map(dice => {
-      const index = Math.floor(Math.random(0, dice.length))
+    const letters = possibleDice.map(dice => {
+      const index = Math.floor(Math.random() * dice.length)
       const letter = dice[index]
       if (letter === "q") {
         return "qu"
@@ -97,7 +101,7 @@ function App() {
     })
     
     const retList = []
-    const tempList = [...possibleDice]
+    const tempList = [...letters]
 
     for (let i = 0; i < possibleDice.length; i++) {
       const index = Math.floor(Math.random(0, tempList.length))
@@ -105,10 +109,9 @@ function App() {
       tempList.splice(index, 1)
     }
 
-    setInitLetter(retList)
+    setInitLetters(retList)
   }
 
-  //TODO
   const setTimer = () => {
     setTimeRemaining(duration)
     setLetters()
@@ -118,6 +121,7 @@ function App() {
         setPageValue(2)
         clearInterval(timer)
       }
+      setTimeRemaining( prev => prev - 1)
     }, 1000)
   }
 
@@ -135,9 +139,23 @@ function App() {
         width={width}
         height={height}
         min={minWordLength}
+        timeRemaining={timeRemaining}
       />
     } else {
-      return <EndPage/>
+      return <EndPage
+        setScore={name => {
+          setHighScores(prev => {
+            if (Object.keys(prev).includes(currGameScore)) {
+              const newObj = {...prev}
+              newObj[currGameScore].push(name)
+              return newObj
+            } else {
+              return {...prev, [currGameScore]: [name]}
+            }
+          })
+          setPageValue(0)
+        }}
+      />
     }
   }
 

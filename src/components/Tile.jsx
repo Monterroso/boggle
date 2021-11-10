@@ -1,18 +1,20 @@
 import React from "react"
 
-const Tile = ({isClicked, isLatestClick, letterOfTile, onClick}) => {
+const Tile = ({isClicked, isLatestClick, letterOfTile, onClick, isTouching}) => {
   const getColor = () => {
     if (isLatestClick) {
       return "green"
     } else if (isClicked) {
       return "blue"
+    } else if (isTouching) {
+      return "red"
     } else {
-      return "white"
+      return "purple"
     }
   }
-  return <div onClick={onClick} style={{backgroundColor: getColor()}}>
+  return <span onClick={onClick} style={{backgroundColor: getColor()}}>
     {letterOfTile}
-  </div>
+  </span>
 }
 
 export default Tile
